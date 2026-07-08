@@ -1,0 +1,46 @@
+name: Update Oil Price JSON
+
+on:
+  schedule:
+    # 00:20 Asia/Shanghai. The script skips API calls before the next price window.
+    - cron: "20 16 * * *"
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: "Force API update now"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate remote oil price JSON
+        env:
+          ALIYUN_OIL_APPCODE: ${{ secrets.ALIYUN_OIL_APPCODE }}
+          OIL_PROVINCES: ${{ vars.OIL_PROVINCES || 'all' }}
+          FORCE_UPDATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_update == 'true' && '1' || '0' }}
+        run: node tools/remote-oil-sync/update-remote-oil-json.js
+
+      - name: Commit JSON when changed
+        run: |
+          if git diff --quiet -- docs/latest-oil-price.json && [ -z "$(git status --porcelain -- docs/latest-oil-price.json)" ]; then
+            echo "No JSON changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/latest-oil-price.json
+          git commit -m "Update oil price JSON"
+          git push
