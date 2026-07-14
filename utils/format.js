@@ -3,13 +3,24 @@ function pad(value) {
 }
 
 function formatDate(date) {
-  const value = new Date(date)
+  const matched = String(date || "").match(/(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})/)
+  if (matched) {
+    return `${matched[1]}-${pad(Number(matched[2]))}-${pad(Number(matched[3]))}`
+  }
+
+  const value = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(value.getTime())) {
+    const today = new Date()
+    return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+  }
+
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`
 }
 
 function daysBetween(from, to) {
   const start = new Date(formatDate(from)).getTime()
   const end = new Date(formatDate(to)).getTime()
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 0
   return Math.max(0, Math.ceil((end - start) / 86400000))
 }
 
