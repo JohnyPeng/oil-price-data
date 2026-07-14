@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "source": "api",
-  "generatedAt": "2026-07-08T20:45:41.343Z",
+  "generatedAt": "2026-07-14T03:56:33.040Z",
   "latest": {
     "id": "2026-06-04",
     "date": "2026-06-04",
@@ -11,7 +11,7 @@
     "sourceUrl": "https://www.ndrc.gov.cn/xwdt/xwfb/202606/t20260604_1405695.html"
   },
   "nextWindow": {
-    "date": "NaN-NaN-NaN",
+    "date": "2026-07-22",
     "note": "按国内成品油调价机制估算，实际以官方发布为准"
   },
   "prices": [
