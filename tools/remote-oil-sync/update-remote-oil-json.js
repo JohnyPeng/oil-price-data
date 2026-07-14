@@ -32,7 +32,7 @@ async function main() {
   const source = fs.readFileSync(dataFile, "utf8")
   const parsed = parseOilData(source)
   const existingPayload = readExistingPayload()
-  const nextWindowDate = existingPayload && existingPayload.nextWindow && existingPayload.nextWindow.date
+  const nextWindowDate = isValidDateText(existingPayload && existingPayload.nextWindow && existingPayload.nextWindow.date)
     ? existingPayload.nextWindow.date
     : getCurrentNextWindow(source)
   const today = getChinaDate()
@@ -273,7 +273,7 @@ function applyApiPriceUpdates(provincePrices, apiPrices) {
       p95: toNumberOrNull(item.p95 ?? item.type95 ?? item.oil95 ?? item.gasoline95 ?? item["95"] ?? item.gasoline95Price),
       p98: toNumberOrNull(item.p98 ?? item.type98 ?? item.oil98 ?? item.gasoline98 ?? item["98"] ?? item.gasoline98Price),
       diesel0: toNumberOrNull(item.diesel0 ?? item.type0 ?? item.oil0 ?? item.diesel ?? item["0"] ?? item.dieselPrice),
-      updatedAt: item.updateTime || item.updatetime || item.updatedAt || item.date || getChinaDate()
+      updatedAt: normalizeDateText(item.updateTime || item.updatetime || item.updatedAt || item.date) || getChinaDate()
     })
   })
 
@@ -327,7 +327,8 @@ function mergeSnapshots(priceSnapshots, updates) {
 function getNewestUpdateDate(updates) {
   return updates
     .map((item) => item.after.updatedAt)
-    .filter(Boolean)
+    .map(normalizeDateText)
+    .filter(isValidDateText)
     .sort()
     .pop()
 }
@@ -386,7 +387,8 @@ function getChinaDate() {
 }
 
 function addWorkingDays(dateText, days) {
-  const date = new Date(`${dateText}T00:00:00+08:00`)
+  const normalized = normalizeDateText(dateText) || getChinaDate()
+  const date = new Date(`${normalized}T00:00:00+08:00`)
   let left = days
   while (left > 0) {
     date.setDate(date.getDate() + 1)
@@ -395,6 +397,16 @@ function addWorkingDays(dateText, days) {
     }
   }
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function normalizeDateText(value) {
+  const match = String(value || "").match(/(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})/)
+  if (!match) return ""
+  return `${match[1]}-${pad(match[2])}-${pad(match[3])}`
+}
+
+function isValidDateText(value) {
+  return /^20\d{2}-\d{2}-\d{2}$/.test(String(value || ""))
 }
 
 function isWeekend(date) {
