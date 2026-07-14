@@ -75,8 +75,8 @@ async function main() {
 
   const nextPrices = mergeProvincePrices(parsed.provincePrices, updates)
   const nextSnapshots = mergeSnapshots(parsed.priceSnapshots, updates)
-  const newestDate = getNewestUpdateDate(updates) || today
-  const nextWindow = addWorkingDays(newestDate, 10)
+  const baseAdjustmentDate = normalizeDateText(parsed.adjustments[0] && parsed.adjustments[0].date) || getNewestUpdateDate(updates) || today
+  const nextWindow = addWorkingDays(baseAdjustmentDate, 10)
   writeJson(buildPayload(parsed, nextPrices, nextSnapshots, nextWindow, "api"))
 
   console.log(`成功更新 ${updates.length} 个地区。`)
